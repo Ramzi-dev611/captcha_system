@@ -15,3 +15,7 @@
     opacity: 0.6;
 }
 
+.toggeledImage{
+    border: solid #0055ff 3px !important;
+    opacity: 0.5;
+}
