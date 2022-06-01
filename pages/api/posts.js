@@ -1,15 +1,9 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
 const { connectToDatabase } = require('../../lib/mongodb');
 const ObjectId = require('mongodb').ObjectId;
 
 
-export type ChallengesResponseData = {
-    id: string,
-    statement: string,
-    path: string[],
-}
-
-export default function handler (req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req, res) {
+    // switch the methods
     switch (req.method) {
         case 'GET': {
             return getPosts(req, res);
@@ -27,24 +21,8 @@ export default function handler (req: NextApiRequest, res: NextApiResponse) {
             return deletePost(req, res);
         }
     }
-const reponseData: ChallengesResponseData = {
-        id: '54qsdjlkhfgfgkjh',
-        statement: "select images of a cat",
-        path: ['http://localhost:3000/images/cat2.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat2.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-        ]
-    }
-    res.status(200).json(reponseData)
 }
-
-async function getPosts(req : NextApiRequest,res: NextApiResponse){
+async function getPosts(req,res){
     try {
         console.log('test')
         // connect to the database
@@ -60,7 +38,7 @@ async function getPosts(req : NextApiRequest,res: NextApiResponse){
             message: JSON.parse(JSON.stringify(posts)),
             success: true,
         });
-    } catch (error : any) {
+    } catch (error) {
         // return the error
         return res.json({
             message: new Error(error).message,
@@ -68,9 +46,7 @@ async function getPosts(req : NextApiRequest,res: NextApiResponse){
         });
     }
 } 
-
-
-async function addPost(req: NextApiRequest, res: NextApiResponse) {
+async function addPost(req, res) {
     try {
 
         console.log('test')
@@ -83,7 +59,7 @@ async function addPost(req: NextApiRequest, res: NextApiResponse) {
             message: 'Post added successfully',
             success: true,
         });
-    } catch (error : any) {
+    } catch (error) {
         // return an error
         return res.json({
             message: new Error(error).message,
