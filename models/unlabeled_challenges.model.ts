@@ -1,13 +1,13 @@
 import * as mongoose from 'mongoose'
 
 export interface IUnlabeledChallenge{
-    id : String;
-    statement : String;
-    imagePath: String;
+    _id? : string;
+    statement : string;
+    imagePath: string;
     stats:{
-        numberOfCollectedAnswers: Number;
-        numberOfPositive: Number;
-        numberOfNegative: Number;
+        numberOfCollectedAnswers: number;
+        numberOfPositive: number;
+        numberOfNegative: number;
 
     }
 }
@@ -19,7 +19,7 @@ const stats = new mongoose.Schema({
 
 })
 const unlabeledChallengeSchema = new mongoose.Schema<IUnlabeledChallenge>({
-    id:        {required : true, type : mongoose.Types.ObjectId},
+    _id:        {required : true, type : mongoose.Types.ObjectId},
     statement: { required: true, type: String},
     imagePath: { required:true, type: String},
     stats:     {required: true ,type : stats}

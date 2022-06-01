@@ -3,7 +3,7 @@ import LabeledChallengeModel, { ILabeledChallenge } from '../../models/labeled_c
 import RequestChallengeModel from '../../models/request_challenge'
 import StatemntModel, { IStatement } from '../../models/statement'
 import dbConnect from '../../lib/mongodb'
-const { connectToDatabase } = require('../../lib/mongodb');
+import UnlabeledChallengeModel, { IUnlabeledChallenge } from '../../models/unlabeled_challenges.model';
 
 export type ChallengesResponseData = {
     id_request?: string,
@@ -19,13 +19,21 @@ export default async function handler (req: NextApiRequest, res: NextApiResponse
 }
 async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     await dbConnect();
-    const statmentObject: IStatement = await (await StatemntModel.find().exec()).at(0)
+    // get the handeled statemnet
+    const statmentObject: IStatement = await (await StatemntModel.aggregate([{$sample: { size: 1 }}]).exec()).at(0)
     const { statement } = statmentObject;
+    // get the labeled challenges
+    const labeledChallengesList: ILabeledChallenge[] = await (await LabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 5 } }]).exec())
+    // get the unlabeled challenges
+    const unlabeledChallenegesList: IUnlabeledChallenge[] = await (await UnlabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 4 } }]).exec())
+    // save the challenge as a first take
 
-    const challengesList: ILabeledChallenge[] = await (await LabeledChallengeModel.find({ statement }).limit(5).exec())
+    // format and return the response to the page
     const response: ChallengesResponseData = {}
     response.id_request = "random string that will be replaced by the id of the stored request"
     response.statement = statement
-    response.challenges = challengesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath}))
+    response.challenges = labeledChallengesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath}))
+    // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath })))
+    console.log(response.challenges);
     res.status(200).json(response)
 }
