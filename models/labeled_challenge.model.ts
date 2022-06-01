@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose'
 export interface ILabeledChallenge {
-    _id?: String;
-    statement: String;
-    imagePath: String;
+    _id?: string;
+    statement: string;
+    imagePath: string;
     stats: {
         numberOfCollectedAnswers: number,
         numberOfPositive: number,

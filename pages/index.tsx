@@ -27,7 +27,7 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
   }
 
 
-  const { statement, path } = response;
+  const { statement, challenges } = response;
   return (
     <div className={`${challengeStyles.challengeContainer}`+' card'}>
       <div className="card-header">
@@ -36,10 +36,10 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
       <div className="card-body">
         <h4 className="card-title mb-3">{ statement }</h4>
         <div className="row">
-          { path.map((element, index) => 
+          { challenges?.map((element, index) => 
            { return (
              <div className={`${challengeStyles.SelectableElement} col-4`} onClick={(event) => {event.preventDefault(); toggleImage(event.target as HTMLElement, index)}} key={index}>
-            <Image src={element} width='150px' height='150px' className='cursor-pointer' alt={statement}/>
+            <Image src={element.path} width='150px' height='150px' className='cursor-pointer' alt={statement}/>
           </div>
            )}) 
         }
