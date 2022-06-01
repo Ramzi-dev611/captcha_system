@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+// import LabeledChallengeModel from '../../models/labeled_challenge.model';
+import dbConnect from '../../lib/mongodb'
 const { connectToDatabase } = require('../../lib/mongodb');
-const ObjectId = require('mongodb').ObjectId;
-
 
 export type ChallengesResponseData = {
     id: string,
@@ -9,41 +9,34 @@ export type ChallengesResponseData = {
     path: string[],
 }
 
-export default function handler (req: NextApiRequest, res: NextApiResponse) {
+export default async function handler (req: NextApiRequest, res: NextApiResponse) {
     switch (req.method) {
         case 'GET': {
-            return getPosts(req, res);
-        }
+            await dbConnect();
+            // return getPosts(req, res);
+            // const reponseData: ChallengesResponseData = {
+            //         id: '54qsdjlkhfgfgkjh',
+            //         statement: "select images of a cat",
+            //         path: ['http://localhost:3000/images/cat2.jpg',
+            //             'http://localhost:3000/images/cat3.jpg',
+            //             'http://localhost:3000/images/cat.jpg',
+            //             'http://localhost:3000/images/cat3.jpg',
+            //             'http://localhost:3000/images/cat3.jpg',
+            //             'http://localhost:3000/images/cat2.jpg',
+            //             'http://localhost:3000/images/cat.jpg',
+            //             'http://localhost:3000/images/cat.jpg',
+            //             'http://localhost:3000/images/cat3.jpg',
+            //         ]
+            //     }
+            // res.status(200).json(reponseData)
 
+            return;
+        }
         case 'POST': {
             return addPost(req, res);
         }
-
-        case 'PUT': {
-            return updatePost(req, res);
-        }
-
-        case 'DELETE': {
-            return deletePost(req, res);
-        }
     }
-const reponseData: ChallengesResponseData = {
-        id: '54qsdjlkhfgfgkjh',
-        statement: "select images of a cat",
-        path: ['http://localhost:3000/images/cat2.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-            'http://localhost:3000/images/cat2.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat.jpg',
-            'http://localhost:3000/images/cat3.jpg',
-        ]
-    }
-    res.status(200).json(reponseData)
 }
-
 async function getPosts(req : NextApiRequest,res: NextApiResponse){
     try {
         console.log('test')
@@ -72,7 +65,6 @@ async function getPosts(req : NextApiRequest,res: NextApiResponse){
 
 async function addPost(req: NextApiRequest, res: NextApiResponse) {
     try {
-
         console.log('test')
         // connect to the database
         let { db } = await connectToDatabase();
