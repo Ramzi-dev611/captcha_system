@@ -3,6 +3,7 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 import challengeStyles from '../styles/Home.module.css'
 import type { ChallengesResponseData } from './api/challenges'
+import type { verifyResponse, verifyInput } from './api/verify'
 
 interface ChallengesInterface {
   response: ChallengesResponseData
@@ -11,25 +12,51 @@ interface ChallengesInterface {
 const Home: NextPage<ChallengesInterface> = ({ response }: {response: ChallengesResponseData}) => {
   const [imagesToggleState, setImagesToggleState] = useState([false, false, false, false, false, false, false, false, false]);
   const [challenge,setChallenge] = useState(response);
+
+  // This is so awefull needs to be changed but for nwo it does the job
+
+  const resetGridStyle = () => {
+    const selectedImages = document.getElementsByClassName(challengeStyles.toggeledImage);
+    console.log(selectedImages.length)
+    while (selectedImages.length > 0){
+      selectedImages[0].classList.remove(challengeStyles.toggeledImage)
+      console.log("removed class")
+    }
+  }
   
-  const sendResponse = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const sendResponse = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    console.log(challenge.requestId)
+    const requestBody: verifyInput = {
+      requestId: challenge.requestId,
+      responses: challenge.challenges?.map((ch, index) => ({ChallengeID: ch.challengeId||"", label: imagesToggleState[index]})) || []
+    }
+    const requestInfo: RequestInit = {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    }
+    const response: verifyResponse = await (await fetch(`http://localhost:3000/api/verify`, requestInfo)).json()
+    console.log(response)
+    if (response.code ===2){ // this is a success in solving the challenge
+      console.log(response.message)
+    } else if(response.code ===1) {
+      console.log(response.message)
+    } else {
+      setChallenge(response.newChallenge||{})
+      setImagesToggleState([false, false, false, false, false, false, false, false, false])
+      resetGridStyle()
+    }
   }
 
   const toggleImage = (target: HTMLElement, index: number) => {
     imagesToggleState[index] = ! imagesToggleState[index];
     if(imagesToggleState[index]){
       target.classList.add(challengeStyles.toggeledImage);
-      console.log(target.classList)
     } else {
       target.classList.remove(challengeStyles.toggeledImage)
-      console.log(target.classList)
     }
   }
-
-
-  const { statement, challenges } = response;
-  console.log(response);
+  const { statement, challenges } = challenge;
   return (
     <div className={`${challengeStyles.challengeContainer}`+' card'}>
       <div className="card-header">
@@ -37,11 +64,11 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
       </div>
       <div className="card-body">
         <h4 className="card-title mb-3">{ statement }</h4>
-        <div className="row">
+        <div className="row" id='grid-row'>
           { challenges?.map((element, index) => 
            { return (
-             <div className={`${challengeStyles.SelectableElement} col-4`} onClick={(event) => {event.preventDefault(); toggleImage(event.target as HTMLElement, index)}} key={index}>
-            <Image src={element.path} width='150px' height='150px' className='cursor-pointer' alt={statement}/>
+             <div className={`${challengeStyles.SelectableElement} col-4`} key={index}>
+            <Image src={element.path} onClick={(event) => {event.preventDefault(); toggleImage(event.target as HTMLElement, index)}} width='150px' height='150px' className='cursor-pointer' alt={statement}/>
           </div>
            )}) 
         }

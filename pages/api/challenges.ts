@@ -34,7 +34,7 @@ export default async function handler (req: NextApiRequest, res: NextApiResponse
 }
 async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     await dbConnect();
-    const response = generateChallengeRequest(1);
+    const response = await generateChallengeRequest(1);
     res.status(200).json(response)
 
 }
@@ -75,36 +75,24 @@ export const generateChallengeRequest = async (take:number): Promise<ChallengesR
     return array;
     }
 
-
-    console.log(challenges);
-
     challenges = shuffle ( challenges);
 
-    console.log(challenges);
-
     let challengesStored: ChallengesStored = challenges.map(challenge => ({ challengeId: challenge.challengeId, expectedAnswer:challenge.expectedAnswer}))
-
-    // let challenges: ChallengesStored = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel}))
-    // challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id}))]
-
     const requestModel = new RequestChallengeModel({ 
         requestTake: take,
         statement,
-        challengesStored 
+        challenges: challengesStored 
         })
 
         const newRequestModel : IRequestChallenge = await requestModel.save();
         
 
     // format and return the response to the page
-    const response: ChallengesResponseData = {}
-    response.requestId = newRequestModel._id;
-    response.statement = statement
-    
-    response.challenges = challenges.map(challenge => ({ challengeId: challenge.challengeId, path: challenge.path}))
-    // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path: challenge.imagePath })))
-    // response.challenges =[...response.challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path: challenge.imagePath }))]
-        
+    const response: ChallengesResponseData = {
+        requestId: newRequestModel._id,
+        statement,
+        challenges: challenges.map(challenge => ({ challengeId: challenge.challengeId, path: challenge.path }))
+    }        
     return response;
 
 }

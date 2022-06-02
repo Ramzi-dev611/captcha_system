@@ -6,7 +6,7 @@ import  {ChallengesResponseData, generateChallengeRequest } from "./challenges";
 
 export type verifyInput =
 {
-    requestId: string,
+    requestId?: string,
     responses: {
         ChallengeID: string,
         label: boolean}[]
@@ -14,7 +14,9 @@ export type verifyInput =
 
 export type verifyResponse =
 {
-    message: string
+    code: number;
+    message: string;
+    newChallenge?: ChallengesResponseData
 } 
 
 dbConnect()
@@ -22,14 +24,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { method } = req
     if(method ==="POST"){
         
-        const {requestId,responses }  = req.body as verifyInput; 
+        const { requestId, responses } = JSON.parse(req.body) as verifyInput 
         const requestChallenge: IRequestChallenge = await (await RequestChallengeModel.findById(requestId).exec());
         let count= 0;
         requestChallenge.challenges.forEach( (el,index)=>{
             count+= el.expectedAnswer? (el.expectedAnswer===responses[index].label ? 1:0) : 0
         })
         if (count==5){
-            const response : verifyResponse = {message:"congratulation you passed the test" } ;
+            const response : verifyResponse = {message:"congratulation you passed the test", code: 2 } ;
             requestChallenge.challenges.forEach(async (el,index)=>{
                 
                     let challenge : IUnlabeledChallenge = await (await unlabeled_challengesModel.findOneAndUpdate(
@@ -50,12 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return ;
         }
         if(requestChallenge.requestTake==2){
-            const response : verifyResponse = {message:"you failed the test please try again" } ;
+            const response : verifyResponse = {message:"you failed the test please try again",code:1} ;
             res.status(300).json(response);
             return ;
         }
         const challenges: ChallengesResponseData = await generateChallengeRequest(2) ;
-        res.status(200).json(challenges);
+        res.status(200).json({message: "here is a new challenge for you", newChallenge: challenges, code:0});
        
     }
 }
