@@ -28,6 +28,7 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
 
 
   const { statement, challenges } = response;
+  console.log(response);
   return (
     <div className={`${challengeStyles.challengeContainer}`+' card'}>
       <div className="card-header">

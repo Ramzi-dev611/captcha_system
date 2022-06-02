@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import LabeledChallengeModel, { ILabeledChallenge } from '../../models/labeled_challenge.model';
-import RequestChallengeModel from '../../models/request_challenge'
+import RequestChallengeModel, { IRequestChallenge } from '../../models/request_challenge'
 import StatemntModel, { IStatement } from '../../models/statement'
 import dbConnect from '../../lib/mongodb'
 import UnlabeledChallengeModel, { IUnlabeledChallenge } from '../../models/unlabeled_challenges.model';
@@ -44,16 +44,15 @@ async function getChallenges(req : NextApiRequest,res: NextApiResponse){
         challenges 
         })
 
-        await requestModel.save();
-        console.log("saved requestModel ")
+        const newRequestModel : IRequestChallenge = await requestModel.save();
+        
 
     // format and return the response to the page
     const response: ChallengesResponseData = {}
-    response.id_request = "random string that will be replaced by the id of the stored request"
+    response.id_request = newRequestModel._id;
     response.statement = statement
     response.challenges = labeledChallengesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath}))
     // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath })))
     response.challenges =[...response.challenges,...unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath }))]
-    console.log(response.challenges);
     res.status(200).json(response)
 }
