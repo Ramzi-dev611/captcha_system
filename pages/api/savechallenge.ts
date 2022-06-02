@@ -1,25 +1,23 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "../../lib/mongodb";
-import LabeledChallenge from '../../models/labeled_challenge.model'
+import unlabeledChallenge from "../../models/unlabeled_challenges.model";
 
 
 dbConnect()
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req
     if(method ==="GET"){
-        const model = new LabeledChallenge({
+        const model = new unlabeledChallenge({
             statement: "select images of a cat",
-            imagePath: "http://localhost:3000/images/cat.png",
+            imagePath: "http://localhost:3000/images/dog1.png",
             stats: {
-                numberOfCollectedAnswers: 5000,
-                numberOfPositive: 4715,
-                numberOfNegative: 285,
-                expectedLabel: true,
-                confidenceLevel: 0.94
+                numberOfCollectedAnswers: 3800,
+                numberOfPositive: 630,
+                numberOfNegative: 3170,
             }
         })
         model.save();
         console.log("I saved a document")
-        res.status(200).json({message: "khrit fiiih"});
+        res.status(200).json({message: "khrit fiiih 2.0"});
     }
 }
