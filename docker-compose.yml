@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  next-application:
+    container_name: captcha
+    build:
+      context: .
+    volumes:
+      - .:/app:rw
+    ports:
+      - "3000:3000"
+    command: npm run dev
+    depends_on:
+      - mongo-database
+    environment:
+      MONGO_URI : "mongodb://root:example@localhost:27017"
+      DEV_URL: "http://localhost:3000"
+
+
+
+  mongo-database:
+    image: mongo
+    restart: always
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+
+
