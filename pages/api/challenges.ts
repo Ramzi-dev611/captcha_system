@@ -13,19 +13,34 @@ import UnlabeledChallengeModel, { IUnlabeledChallenge } from '../../models/unlab
 
 
 export type ChallengesResponseData = {
-    id_request?: string,
+    requestId?: string,
     statement?: string,
     challenges?: {
-        challenge_id?: string,
+        challengeId?: string,
         path: string
     }[],
 }
+
+
+type mappedChallenges = {
+    challengeId?: string,
+    expectedAnswer?: boolean
+    path: string
+}[]
+
 
 export default async function handler (req: NextApiRequest, res: NextApiResponse) {
     await getChallenges(req, res);
 }
 async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     await dbConnect();
+    const response = generateChallengeRequest(1);
+    res.status(200).json(response)
+
+}
+
+
+export const generateChallengeRequest = async (take:number): Promise<ChallengesResponseData> =>{
     // get the handeled statemnet
     const statmentObject: IStatement = await (await StatemntModel.aggregate([{$sample: { size: 1 }}]).exec()).at(0)
     const { statement } = statmentObject;
@@ -35,13 +50,47 @@ async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     const unlabeledChallenegesList: IUnlabeledChallenge[] = await (await UnlabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 4 } }]).exec())
     // save the challenge as a first take
     
-    let challenges: ChallengesStored = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel}))
-    challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id}))]
+    //                   ***TODO***
+    //   shuffle the challenges list before pushing to bd 
+    let challenges: mappedChallenges = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel, path:challenge.imagePath}))
+    challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path:challenge.imagePath}))]
+
+
+//shuffle
+    function shuffle(array:any) {
+    let currentIndex = array.length,  randomIndex;
+  
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+  
+    return array;
+    }
+
+
+    console.log(challenges);
+
+    challenges = shuffle ( challenges);
+
+    console.log(challenges);
+
+    let challengesStored: ChallengesStored = challenges.map(challenge => ({ challengeId: challenge.challengeId, expectedAnswer:challenge.expectedAnswer}))
+
+    // let challenges: ChallengesStored = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel}))
+    // challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id}))]
 
     const requestModel = new RequestChallengeModel({ 
-        requestTake: 1,
+        requestTake: take,
         statement,
-        challenges 
+        challengesStored 
         })
 
         const newRequestModel : IRequestChallenge = await requestModel.save();
@@ -49,10 +98,13 @@ async function getChallenges(req : NextApiRequest,res: NextApiResponse){
 
     // format and return the response to the page
     const response: ChallengesResponseData = {}
-    response.id_request = newRequestModel._id;
+    response.requestId = newRequestModel._id;
     response.statement = statement
-    response.challenges = labeledChallengesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath}))
-    // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath })))
-    response.challenges =[...response.challenges,...unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath }))]
-    res.status(200).json(response)
+    
+    response.challenges = challenges.map(challenge => ({ challengeId: challenge.challengeId, path: challenge.path}))
+    // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path: challenge.imagePath })))
+    // response.challenges =[...response.challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path: challenge.imagePath }))]
+        
+    return response;
+
 }
