@@ -6,7 +6,7 @@ import  {ChallengesResponseData, generateChallengeRequest } from "./challenges";
 
 export type verifyInput =
 {
-    requestId: string,
+    requestId?: string,
     responses: {
         ChallengeID: string,
         label: boolean}[]
@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { method } = req
     if(method ==="POST"){
         
-        const {requestId,responses }  = req.body as verifyInput; 
+        const { requestId, responses } = JSON.parse(req.body) as verifyInput 
+        console.log(req.body)
         const requestChallenge: IRequestChallenge = await (await RequestChallengeModel.findById(requestId).exec());
         let count= 0;
         requestChallenge.challenges.forEach( (el,index)=>{

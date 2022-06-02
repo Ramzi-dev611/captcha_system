@@ -3,6 +3,7 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 import challengeStyles from '../styles/Home.module.css'
 import type { ChallengesResponseData } from './api/challenges'
+import type { verifyResponse, verifyInput } from './api/verify'
 
 interface ChallengesInterface {
   response: ChallengesResponseData
@@ -12,8 +13,19 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
   const [imagesToggleState, setImagesToggleState] = useState([false, false, false, false, false, false, false, false, false]);
   const [challenge,setChallenge] = useState(response);
   
-  const sendResponse = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const sendResponse = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    console.log(challenge.requestId)
+    const requestBody: verifyInput = {
+      requestId: challenge.requestId,
+      responses: challenge.challenges?.map((ch, index) => ({ChallengeID: ch.challengeId||"", label: imagesToggleState[index]})) || []
+    }
+    const requestInfo: RequestInit = {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    }
+    const response: ChallengesResponseData | verifyResponse = await (await fetch(`http://localhost:3000/api/verify`, requestInfo)).json()
+    console.log(response)
   }
 
   const toggleImage = (target: HTMLElement, index: number) => {
@@ -26,10 +38,7 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
       console.log(target.classList)
     }
   }
-
-
   const { statement, challenges } = response;
-  console.log(response);
   return (
     <div className={`${challengeStyles.challengeContainer}`+' card'}>
       <div className="card-header">
