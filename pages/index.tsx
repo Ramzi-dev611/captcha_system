@@ -24,8 +24,16 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
       method: 'POST',
       body: JSON.stringify(requestBody)
     }
-    const response: ChallengesResponseData | verifyResponse = await (await fetch(`http://localhost:3000/api/verify`, requestInfo)).json()
+    const response: verifyResponse = await (await fetch(`http://localhost:3000/api/verify`, requestInfo)).json()
     console.log(response)
+    if (response.code ===2){ // this is a success in solving the challenge
+      console.log(response.message)
+    } else if(response.code ===1) {
+      console.log(response.message)
+    } else {
+      setChallenge(response.newChallenge||{})
+      setImagesToggleState([false, false, false, false, false, false, false, false, false])
+    }
   }
 
   const toggleImage = (target: HTMLElement, index: number) => {
@@ -38,7 +46,7 @@ const Home: NextPage<ChallengesInterface> = ({ response }: {response: Challenges
       console.log(target.classList)
     }
   }
-  const { statement, challenges } = response;
+  const { statement, challenges } = challenge;
   return (
     <div className={`${challengeStyles.challengeContainer}`+' card'}>
       <div className="card-header">

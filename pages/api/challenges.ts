@@ -88,10 +88,11 @@ export const generateChallengeRequest = async (take:number): Promise<ChallengesR
         
 
     // format and return the response to the page
-    const response: ChallengesResponseData = {}
-    response.requestId = newRequestModel._id;
-    response.statement = statement
-    response.challenges = challenges.map(challenge => ({ challengeId: challenge.challengeId, path: challenge.path}))        
+    const response: ChallengesResponseData = {
+        requestId: newRequestModel._id,
+        statement,
+        challenges: challenges.map(challenge => ({ challengeId: challenge.challengeId, path: challenge.path }))
+    }        
     return response;
 
 }
