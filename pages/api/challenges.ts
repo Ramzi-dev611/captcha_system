@@ -5,6 +5,13 @@ import StatemntModel, { IStatement } from '../../models/statement'
 import dbConnect from '../../lib/mongodb'
 import UnlabeledChallengeModel, { IUnlabeledChallenge } from '../../models/unlabeled_challenges.model';
 
+ type ChallengesStored = 
+     {
+        challengeId?: string,
+        expectedAnswer?: boolean
+    }[]
+
+
 export type ChallengesResponseData = {
     id_request?: string,
     statement?: string,
@@ -27,6 +34,18 @@ async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     // get the unlabeled challenges
     const unlabeledChallenegesList: IUnlabeledChallenge[] = await (await UnlabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 4 } }]).exec())
     // save the challenge as a first take
+    
+    let challenges: ChallengesStored = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel}))
+    challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id}))]
+
+    const requestModel = new RequestChallengeModel({ 
+        requestTake: 1,
+        statement,
+        challenges 
+        })
+
+        await requestModel.save();
+        console.log("saved requestModel ")
 
     // format and return the response to the page
     const response: ChallengesResponseData = {}
@@ -34,6 +53,7 @@ async function getChallenges(req : NextApiRequest,res: NextApiResponse){
     response.statement = statement
     response.challenges = labeledChallengesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath}))
     // response.challenges.concat(unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath })))
+    response.challenges =[...response.challenges,...unlabeledChallenegesList.map(challenge => ({ challenge_id: challenge._id, path: challenge.imagePath }))]
     console.log(response.challenges);
     res.status(200).json(response)
 }

@@ -6,13 +6,13 @@ export interface IRequestChallenge{
     statement: string;
     challenges: {
         challengeId: string;
-        expectedAnswer: boolean
+        expectedAnswer?: boolean
     }[]
 }
 
 export const ChallengeSchema = new mongoose.Schema({
     challengeId: { required:true, type: String},
-    expectedAnswer: { required:true, type: Boolean}
+    expectedAnswer: { type: Boolean}
 })
 
 export const RequestChallengeSchema = new mongoose.Schema({
