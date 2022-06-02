@@ -10,6 +10,7 @@ interface ChallengesInterface {
 
 const Home: NextPage<ChallengesInterface> = ({ response }: {response: ChallengesResponseData}) => {
   const [imagesToggleState, setImagesToggleState] = useState([false, false, false, false, false, false, false, false, false]);
+  const [challenge,setChallenge] = useState(response);
   
   const sendResponse = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

@@ -1,28 +1,61 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "../../lib/mongodb";
+import RequestChallengeModel, { IRequestChallenge } from '../../models/request_challenge'
+import unlabeled_challengesModel, { IUnlabeledChallenge } from "../../models/unlabeled_challenges.model";
+import  {ChallengesResponseData, generateChallengeRequest } from "./challenges";
 
+export type verifyInput =
+{
+    requestId: string,
+    responses: {
+        ChallengeID: string,
+        label: boolean}[]
+}
 
+export type verifyResponse =
+{
+    message: string
+} 
 
 dbConnect()
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req
-    if(method ==="GET"){
-        const 
-        {req_id,
-        requestTake,
-        statement,
-        challenges} = req.query ;
-        // new unlabeledChallenge({
-        //     statement: "select images of a cat",
-        //     imagePath: "http://localhost:3000/images/cat2.png",
-        //     stats: {
-        //         numberOfCollectedAnswers: 4200,
-        //         numberOfPositive: 3760,
-        //         numberOfNegative: 440,
-        //     }
-        // })
-        // requestModel.save();
-        console.log("")
-        res.status(200).json({message: "khrit fiiih 2.0"});
+    if(method ==="POST"){
+        
+        const {requestId,responses }  = req.body as verifyInput; 
+        const requestChallenge: IRequestChallenge = await (await RequestChallengeModel.findById(requestId).exec());
+        let count= 0;
+        requestChallenge.challenges.forEach( (el,index)=>{
+            count+= el.expectedAnswer? (el.expectedAnswer===responses[index].label ? 1:0) : 0
+        })
+        if (count==5){
+            const response : verifyResponse = {message:"congratulation you passed the test" } ;
+            requestChallenge.challenges.forEach(async (el,index)=>{
+                
+                    let challenge : IUnlabeledChallenge = await (await unlabeled_challengesModel.findOneAndUpdate(
+                        {_id : el.challengeId},
+                        {
+                           $inc : 
+                                {'stats.numberOfCollectedAnswers':1,
+                                'stats.numberOfPositive' : responses[index].label?1:0,
+                                'stats.numberOfNegative' : responses[index].label?0:1,
+                                    
+                        }                            
+                        }
+                        ).exec());
+
+            })
+
+            res.status(200).json(response);
+            return ;
+        }
+        if(requestChallenge.requestTake==2){
+            const response : verifyResponse = {message:"you failed the test please try again" } ;
+            res.status(300).json(response);
+            return ;
+        }
+        const challenges: ChallengesResponseData = await generateChallengeRequest(2) ;
+        res.status(200).json(challenges);
+       
     }
 }

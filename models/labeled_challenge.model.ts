@@ -17,8 +17,18 @@ export const statsSchema = new mongoose.Schema({
     numberOfPositive: {type: Number},
     numberOfNegative: {type: Number},
     expectedLabel: {type: Boolean},
-    confidenceLevel: {type: Number}
+    // confidenceLevel: {type: Number}
+    // confidenceLevel: {
+    // type: Number,
+    // default: function() {
+    //     return this.numberOfPositive / this.numberOfNegative ;
+    // }
+    // }
 })
+statsSchema.virtual('confidenceLevel')
+    .get(function() {
+        return this.expectedLabel? this.numberOfPositive/this.numberOfCollectedAnswers : this.numberOfNegative/this.numberOfCollectedAnswers;
+    });
 
 const LabeledChallengeSchema = new mongoose.Schema<ILabeledChallenge>({
     statement: { required: true, type: String },
