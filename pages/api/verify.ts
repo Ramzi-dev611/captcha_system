@@ -28,9 +28,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const requestChallenge: IRequestChallenge = await (await RequestChallengeModel.findById(requestId).exec());
         let count= 0;
         requestChallenge.challenges.forEach( (el,index)=>{
-            count+= el.expectedAnswer!=undefined ? (el.expectedAnswer===responses[index].label ? 1:0) : 0
+            count+= el.expectedAnswer? (el.expectedAnswer===responses[index].label ? 1:0) : 0
         })
-        console.log()
+        requestChallenge.challenges.forEach(async (el,index)=>{
+            if(el.expectedAnswer!=undefined){
+                let challenge: ILabeledChallenge = await(await labeled_challengeModel.findOneAndUpdate(
+                    {_id:el.challengeId},
+                    { $inc:{
+                        'stat.numberOfCollectedAnswers':1,
+                        'stats.numberOfPositive':responses[index].label?1:0,
+                        'stats.numberOfNegative':responses[index].label?0:1
+                             }
+                          }
+                        ).exec());
+                  }
+                }
+            )
+
         if (count==5){
             const response : verifyResponse = {message:"congratulation you passed the test", code: 2 } ;
             requestChallenge.challenges.forEach(async (el,index)=>{
@@ -48,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         ).exec());
 
             })
+
 
             res.status(200).json(response);
             return ;
