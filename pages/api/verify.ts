@@ -28,8 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const requestChallenge: IRequestChallenge = await (await RequestChallengeModel.findById(requestId).exec());
         let count= 0;
         requestChallenge.challenges.forEach( (el,index)=>{
-            count+= el.expectedAnswer? (el.expectedAnswer===responses[index].label ? 1:0) : 0
+            count+= el.expectedAnswer!=undefined ? (el.expectedAnswer===responses[index].label ? 1:0) : 0
         })
+        console.log()
         if (count==5){
             const response : verifyResponse = {message:"congratulation you passed the test", code: 2 } ;
             requestChallenge.challenges.forEach(async (el,index)=>{
