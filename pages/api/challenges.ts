@@ -45,12 +45,12 @@ export const generateChallengeRequest = async (take:number): Promise<ChallengesR
     const statmentObject: IStatement = await (await StatemntModel.aggregate([{$sample: { size: 1 }}]).exec()).at(0)
     const { statement } = statmentObject;
     // get the labeled challenges
-    const labeledChallengesList: ILabeledChallenge[] = await (await LabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 5 } }]).exec())
+    const labeledChallengesList: ILabeledChallenge[] = await (await LabeledChallengeModel.aggregate([{ $match: { statement , confidenceLevel : {$gte: take*0.5-0.4} } }, { $sample: { size: 5 } }]).exec())
     // get the unlabeled challenges
     const unlabeledChallenegesList: IUnlabeledChallenge[] = await (await UnlabeledChallengeModel.aggregate([{ $match: { statement } }, { $sample: { size: 4 } }]).exec())
     // save the challenge as a first take
     
-    //                   ***TODO***
+
     //   shuffle the challenges list before pushing to bd 
     let challenges: mappedChallenges = labeledChallengesList.map(challenge => ({ challengeId: challenge._id, expectedAnswer:challenge.stats.expectedLabel, path:challenge.imagePath}))
     challenges =[...challenges,...unlabeledChallenegesList.map(challenge => ({ challengeId: challenge._id, path:challenge.imagePath}))]

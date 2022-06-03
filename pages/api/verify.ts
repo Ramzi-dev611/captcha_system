@@ -3,6 +3,7 @@ import dbConnect from "../../lib/mongodb";
 import RequestChallengeModel, { IRequestChallenge } from '../../models/request_challenge'
 import unlabeled_challengesModel, { IUnlabeledChallenge } from "../../models/unlabeled_challenges.model";
 import  {ChallengesResponseData, generateChallengeRequest } from "./challenges";
+import labeled_challengeModel, {ILabeledChallenge} from "../../models/labeled_challenge.model";
 
 export type verifyInput =
 {
@@ -30,6 +31,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         requestChallenge.challenges.forEach( (el,index)=>{
             count+= el.expectedAnswer? (el.expectedAnswer===responses[index].label ? 1:0) : 0
         })
+        requestChallenge.challenges.forEach(async (el,index)=>{
+            if(el.expectedAnswer!=undefined){
+                let challenge: ILabeledChallenge = await(await labeled_challengeModel.findOneAndUpdate(
+                    {_id:el.challengeId},
+                    { $inc:{
+                        'stat.numberOfCollectedAnswers':1,
+                        'stats.numberOfPositive':responses[index].label?1:0,
+                        'stats.numberOfNegative':responses[index].label?0:1
+                             }
+                          }
+                        ).exec());
+                  }
+                }
+            )
+
         if (count==5){
             const response : verifyResponse = {message:"congratulation you passed the test", code: 2 } ;
             requestChallenge.challenges.forEach(async (el,index)=>{
@@ -47,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         ).exec());
 
             })
+
 
             res.status(200).json(response);
             return ;
