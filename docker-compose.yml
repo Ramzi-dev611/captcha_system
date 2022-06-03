@@ -1,15 +1,10 @@
 version: '3.7'
 
-networks:
-  captcha-network:
-
 services:
   application: 
     container_name: captcha-app
     build: .
     hostname: captcha-app
-    networks:
-      - captcha-network
     ports:
       - 3000:3000
     command: npm start
@@ -17,17 +12,14 @@ services:
       - database
 
   database: 
-    container_name: database
     image: mongo
+    container_name: database
     hostname: databasehost
-    networks:
-      - captcha-network
-    volumes:
-      - dbdata:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: captchadatabase
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-
+    ports:
+        - '27017-27019:27017-27019'
+    volumes: 
+      - mongodbdata:/data/db
+      
 volumes:
-  dbdata:
+  mongodbdata:
+    driver: local
