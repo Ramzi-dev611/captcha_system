@@ -3,7 +3,6 @@ import dbConnect from "../../lib/mongodb";
 import RequestChallengeModel, { IRequestChallenge } from '../../models/request_challenge'
 import unlabeled_challengesModel, { IUnlabeledChallenge } from "../../models/unlabeled_challenges.model";
 import  {ChallengesResponseData, generateChallengeRequest } from "./challenges";
-import labeled_challengeModel, {ILabeledChallenge} from "../../models/labeled_challenge.model";
 
 export type verifyInput =
 {
