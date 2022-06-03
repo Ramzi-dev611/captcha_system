@@ -108,7 +108,7 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
 }
 
 export const getServerSideProps: GetServerSideProps = async (constext) => {
-  const response: ChallengesResponseData = await (await fetch('http://localhost:3000/api/challenges')).json()
+  const response: ChallengesResponseData | "" = await (await fetch('http://localhost:3000/api/challenges')).json()
   return {
     props: {
       response, 

@@ -1,29 +1,33 @@
 version: '3.7'
 
+networks:
+  captcha-network:
+
 services:
-  next-application:
-    container_name: captcha
-    build:
-      context: .
-    volumes:
-      - .:/app:rw
+  application: 
+    container_name: captcha-app
+    build: .
+    hostname: captcha-app
+    networks:
+      - captcha-network
     ports:
-      - "3000:3000"
-    command: npm run dev
+      - 3000:3000
+    command: npm start
     depends_on:
-      - mongo-database
-    environment:
-      MONGO_URI : "mongodb://root:example@localhost:27017"
-      DEV_URL: "http://localhost:3000"
+      - database
 
-
-
-  mongo-database:
+  database: 
+    container_name: database
     image: mongo
-    restart: always
+    hostname: databasehost
+    networks:
+      - captcha-network
     volumes:
-      - ./data:/data/db
-    ports:
-      - "27017:27017"
+      - dbdata:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: captchadatabase
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
 
-
+volumes:
+  dbdata:
