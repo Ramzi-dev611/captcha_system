@@ -1,6 +1,7 @@
 import type { NextPage, GetServerSideProps } from 'next'
+import Head from 'next/head'
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import challengeStyles from '../styles/Home.module.css'
 import type { ChallengesResponseData } from './api/challenges'
 import type { verifyResponse, verifyInput } from './api/verify'
@@ -15,9 +16,19 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
   const [challenge,setChallenge] = useState(response);
   const [ pageSelector, setPageSelector ] = useState(whichPage)
   const [ message, setMessage ] = useState("")
+  const [ opener, setOpener ] = useState<MessageEventSource>()
+  const [ openerOrigine, setOpenerOrigine ] = useState("")
+
+  useEffect(() => {
+    window.addEventListener("message", event => {
+      if(event.source != null){
+        setOpenerOrigine(event.origin);
+        setOpener(event.source)
+      }
+    })
+  }, []);
 
   // This is so awefull needs to be changed but for nwo it does the job
-
   const resetGridStyle = () => {
     const selectedImages = document.getElementsByClassName(challengeStyles.toggeledImage);
     while (selectedImages.length > 0){
@@ -27,7 +38,6 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
   
   const sendResponse = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    console.log(challenge.requestId)
     const requestBody: verifyInput = {
       requestId: challenge.requestId,
       responses: challenge.challenges?.map((ch, index) => ({ChallengeID: ch.challengeId||"", label: imagesToggleState[index]})) || []
@@ -37,7 +47,6 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
       body: JSON.stringify(requestBody)
     }
     const response: verifyResponse = await (await fetch(`http://localhost:3000/api/verify`, requestInfo)).json()
-    console.log(response)
     if (response.code ===2){ // this is a success in solving the challenge
       setPageSelector(2)
       setMessage(response.message)
@@ -73,15 +82,15 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
              { return (
                <div className={`${challengeStyles.SelectableElement} col-4`} key={index}>
               <Image src={element.path} onClick={(event) => {
-                    event.preventDefault(); 
-                    toggleImage(event.target as HTMLElement, index)
-                    }} width='100%' 
-                    height='100%' 
-                    className='cursor-pointer' 
-                    alt={statement}/>
+                event.preventDefault(); 
+                toggleImage(event.target as HTMLElement, index)
+              }} width='100%' 
+              height='100%' 
+              className='cursor-pointer' 
+              alt={statement}/>
             </div>
              )}) 
-          }
+            }
           </div>
           <div className='mt-3'>
             <div className='d-flex justify-content-end mx-4'>
@@ -94,15 +103,24 @@ const Home: NextPage<ChallengesInterface> = ({ response, whichPage }: {response:
   } else {
     const cardImageTop: string = (pageSelector === 2) ? '/thumbsup.png' : '/thumbsdown.png';
     const messageStyle: string = (pageSelector === 2) ? "alert alert-success" : "alert alert-danger"
-        return (
+    if(opener != undefined){
+      if (!(opener instanceof MessagePort) && !(opener instanceof ServiceWorker)){
+        opener.postMessage((pageSelector===2)?"success":"failed", openerOrigine);
+      }
+    }
+    return (
+      <>
+      <Head>
+      </Head>
       <div className={`${challengeStyles.challengeContainer}`+' card p-5'}>
-      <Image className='card-image-top' width='10px' height="300px" alt="card image top" src={cardImageTop}></Image>
-      <div className="card-body p-4 mt-5">
-        <span className='w-inherit'>
-          <h4 className={`${messageStyle}`}>{ message }</h4>
-        </span>
+        <Image className='card-image-top' width='10px' height="300px" alt="card image top" src={cardImageTop}></Image>
+        <div className="card-body p-4 mt-5">
+          <span className='w-inherit'>
+            <h4 className={`${messageStyle}`}>{ message }</h4>
+          </span>
+        </div>
       </div>
-    </div>
+      </>
     )
   }
 }
